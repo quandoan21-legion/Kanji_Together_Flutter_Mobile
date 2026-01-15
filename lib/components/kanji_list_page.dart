@@ -23,7 +23,7 @@ class _KanjiListPageState extends State<KanjiListPage> {
     setState(() => isLoading = true);
 
     final uri = Uri.parse(
-      "https://ff2a6342-c57f-4528-8ecb-207de883eafc.mock.pstmn.io/api/v1/kanji-characters",
+      "https://b0cf4586ffec.ngrok-free.app/api/v1/kanji-characters",
     );
 
     try {
