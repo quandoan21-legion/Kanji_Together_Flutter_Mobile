@@ -10,7 +10,7 @@ class KanjiListPage extends StatefulWidget {
 }
 
 class _KanjiListPageState extends State<KanjiListPage> {
-  List kanjiList = [];
+  List<dynamic> kanjiList = [];
   bool isLoading = true;
 
   @override
@@ -20,77 +20,75 @@ class _KanjiListPageState extends State<KanjiListPage> {
   }
 
   Future<void> fetchKanji() async {
+    setState(() => isLoading = true);
 
-    final response =[
-        {
-          "id": 1,
-          "kanji": "会",
-          "meaning": "cuộc họp; họp; hội nghị",
-          "onyomi": "カイ エ",
-          "kunyomi": "あ.う あ.わせる あつ.まる",
-          "level": 70
-        },
-        {
-          "id": 2,
-          "kanji": "日",
-          "meaning": "ngày; mặt trời",
-          "onyomi": "ニチ ジツ",
-          "kunyomi": "ひ び",
-          "level": 1
-        },
-        {
-          "id": 3,
-          "kanji": "学",
-          "meaning": "học",
-          "onyomi": "ガク",
-          "kunyomi": "まな.ぶ",
-          "level": 5
-        }
-      ]
-    ;
+    final uri = Uri.parse(
+      "https://ff2a6342-c57f-4528-8ecb-207de883eafc.mock.pstmn.io/api/v1/kanji-characters",
+    );
 
-    setState(() {
-      kanjiList = List.from(response);
-      isLoading = false;
-    });
+    try {
+      final res = await http.get(uri, headers: {
+        "Accept": "application/json",
+        // If your Postman mock requires it, add:
+        // "x-api-key": "<YOUR_POSTMAN_MOCK_KEY>",
+      });
+
+      if (res.statusCode == 200) {
+        final decoded = jsonDecode(res.body);
+
+        // If API returns { status, message, data: [...] }
+        final list = decoded is List ? decoded : (decoded["data"] ?? []);
+
+        setState(() {
+          kanjiList = List<dynamic>.from(list);
+          isLoading = false;
+        });
+      } else {
+        throw Exception("HTTP ${res.statusCode}: ${res.body}");
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to load kanji: $e")),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Kanji List"),
-      ),
+      appBar: AppBar(title: const Text("Kanji List")),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-        itemCount: kanjiList.length,
-        itemBuilder: (context, index) {
-          final kanji = kanjiList[index];
+              itemCount: kanjiList.length,
+              itemBuilder: (context, index) {
+                final kanji = kanjiList[index] as Map<String, dynamic>;
 
-          return Card(
-            margin: const EdgeInsets.all(8),
-            child: ListTile(
-              title: Text(
-                kanji["kanji"],
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Meaning: ${kanji["meaning"]}"),
-                  Text("Onyomi: ${kanji["onyomi"]}"),
-                  Text("Kunyomi: ${kanji["kunyomi"]}"),
-                  Text("Level: ${kanji["level"]}"),
-                ],
-              ),
+                return Card(
+                  margin: const EdgeInsets.all(8),
+                  child: ListTile(
+                    title: Text(
+                      "${kanji["kanji"] ?? ""}",
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Meaning: ${kanji["meaning"] ?? kanji["translation"] ?? ""}"),
+                        Text("Onyomi: ${kanji["onyomi"] ?? kanji["on_pronunciation"] ?? ""}"),
+                        Text("Kunyomi: ${kanji["kunyomi"] ?? kanji["kun_pronunciation"] ?? ""}"),
+                        Text("Level: ${kanji["level"] ?? kanji["jlpt"] ?? ""}"),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }
