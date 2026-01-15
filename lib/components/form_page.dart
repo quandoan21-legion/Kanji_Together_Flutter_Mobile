@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
@@ -24,19 +23,23 @@ class _FormPageState extends State<FormPage> {
   Future<void> submitForm() async {
     final data = {
       "kanji": kanjiController.text,
-      "meaning": meaningController.text,
-      "onyomi": onyomiController.text,
-      "kunyomi": kunyomiController.text,
-      "level": levelController.text,
+      "on_pronunciation": onyomiController.text,
+      "kun_pronunciation": kunyomiController.text,
+      "num_strokes": 0,
+      "jlpt": int.tryParse(levelController.text),
+      "kanji_description": meaningController.text,
+      "translation": meaningController.text,
+      "is_active": true,
+      "create_by": 1,
     };
 
     final response = await http.post(
-      Uri.parse("http://10.0.2.2:8080/api/students"),
+      Uri.parse("https://b0cf4586ffec.ngrok-free.app/api/v1/kanji-characters"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(data)
     );
 
-    if (response.statusCode == 201) {
+    if (response.statusCode == 201 || response.statusCode == 200) {
       print("SUCCESS: ${response.body}");
     } else {
       print("FAILED: ${response.body}");
