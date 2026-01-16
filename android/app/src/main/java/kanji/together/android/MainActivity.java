@@ -1,4 +1,4 @@
-package com.example.kanji_together1;
+package kanji.together.android;
 
 import io.flutter.embedding.android.FlutterActivity;
 

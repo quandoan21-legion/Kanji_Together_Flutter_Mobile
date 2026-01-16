@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "714015275484",
+    "project_id": "kanji-together",
+    "storage_bucket": "kanji-together.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:714015275484:android:18166b3d525e9cb79eb719",
+        "android_client_info": {
+          "package_name": "kanji.together.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJiTW-NyGhOs00477sH1ONpNWRYC8Ups4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
