@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../components/kanji_list_body.dart';
 
 class KanjiListPage extends StatefulWidget {
   const KanjiListPage({super.key});
@@ -12,6 +13,15 @@ class KanjiListPage extends StatefulWidget {
 class _KanjiListPageState extends State<KanjiListPage> {
   List<dynamic> kanjiList = [];
   bool isLoading = true;
+
+  List<dynamic> _extractKanjiList(dynamic decoded) {
+    if (decoded is List) return decoded;
+    if (decoded is Map<String, dynamic>) {
+      final data = decoded["data"];
+      if (data is List) return data;
+    }
+    return [];
+  }
 
   @override
   void initState() {
@@ -29,6 +39,7 @@ class _KanjiListPageState extends State<KanjiListPage> {
     try {
       final res = await http.get(uri, headers: {
         "Accept": "application/json",
+        "ngrok-skip-browser-warning": "true",
         // If your Postman mock requires it, add:
         // "x-api-key": "<YOUR_POSTMAN_MOCK_KEY>",
       });
@@ -37,7 +48,7 @@ class _KanjiListPageState extends State<KanjiListPage> {
         final decoded = jsonDecode(res.body);
 
         // If API returns { status, message, data: [...] }
-        final list = decoded is List ? decoded : (decoded["data"] ?? []);
+        final list = _extractKanjiList(decoded);
 
         setState(() {
           kanjiList = List<dynamic>.from(list);
@@ -59,36 +70,10 @@ class _KanjiListPageState extends State<KanjiListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text("Kanji List")),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              itemCount: kanjiList.length,
-              itemBuilder: (context, index) {
-                final kanji = kanjiList[index] as Map<String, dynamic>;
-
-                return Card(
-                  margin: const EdgeInsets.all(8),
-                  child: ListTile(
-                    title: Text(
-                      "${kanji["kanji"] ?? ""}",
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("Meaning: ${kanji["meaning"] ?? kanji["translation"] ?? ""}"),
-                        Text("Onyomi: ${kanji["onyomi"] ?? kanji["on_pronunciation"] ?? ""}"),
-                        Text("Kunyomi: ${kanji["kunyomi"] ?? kanji["kun_pronunciation"] ?? ""}"),
-                        Text("Level: ${kanji["level"] ?? kanji["jlpt"] ?? ""}"),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+      body: KanjiListBody(
+        isLoading: isLoading,
+        kanjiList: kanjiList,
+      ),
     );
   }
 }

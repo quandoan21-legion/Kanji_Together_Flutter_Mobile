@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
-import 'custom_text_field.dart';
+import '../components/kanji_form_actions.dart';
+import '../components/kanji_form_fields.dart';
 
 class FormPage extends StatefulWidget {
   const FormPage({super.key});
@@ -68,7 +69,7 @@ class _FormPageState extends State<FormPage> {
     if (response.statusCode == 201 || response.statusCode == 200) {
       return _parseKanjiId(response.body);
     }
-    return null;
+    throw Exception("HTTP ${response.statusCode}: ${response.body}");
   }
 
   Future<bool> _submitStory(int kanjiId) async {
@@ -86,9 +87,8 @@ class _FormPageState extends State<FormPage> {
 
     if (response.statusCode == 201 || response.statusCode == 200) {
       return true;
-    } else {
-      return false;
     }
+    throw Exception("HTTP ${response.statusCode}: ${response.body}");
   }
 
   Future<void> generateAiStory() async {
@@ -141,6 +141,7 @@ class _FormPageState extends State<FormPage> {
   }
 
   Future<void> submitForm() async {
+    FocusScope.of(context).unfocus();
     if (kanjiController.text.trim().isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -149,30 +150,28 @@ class _FormPageState extends State<FormPage> {
       return;
     }
 
-    final kanjiId = await _createKanjiCharacter();
-    if (kanjiId == null) {
+    try {
+      final kanjiId = await _createKanjiCharacter();
+
+      if (kanjiId == null) {
+        throw Exception("Missing kanji id in response.");
+      }
+
+      if (storyController.text.trim().isNotEmpty) {
+        await _submitStory(kanjiId);
+      }
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to create kanji.")),
+        const SnackBar(content: Text("Kanji created successfully.")),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to submit kanji: $e")),
       );
       return;
     }
-
-    if (storyController.text.trim().isNotEmpty) {
-      final storyCreated = await _submitStory(kanjiId);
-      if (!storyCreated) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Kanji created, but story failed.")),
-        );
-        return;
-      }
-    }
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Kanji created successfully.")),
-    );
   }
 
   @override
@@ -198,90 +197,25 @@ class _FormPageState extends State<FormPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  "Create Kanji",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                CustomTextField(
-                  title: "Kanji",
-                  titleFontSize: 20,
-                  placeholder: "会",
-                  backgroundColor: const Color(0xffffffff),
-                  controller: kanjiController,
-                  borderRadius: 12,
-                  type: TextInputType.text,
-                ),
-                CustomTextField(
-                  title: "Ý Nghĩa",
-                  titleFontSize: 20,
-                  placeholder: "cuộc họp; họp; hội nghị",
-                  backgroundColor: const Color(0xffffffff),
-                  controller: meaningController,
-                  borderRadius: 12,
-                  type: TextInputType.text,
-                ),
-                CustomTextField(
-                  title: "Âm On",
-                  titleFontSize: 20,
-                  placeholder: "カイ    エ",
-                  backgroundColor: const Color(0xffffffff),
-                  controller: onyomiController,
-                  borderRadius: 12,
-                  type: TextInputType.text,
-                ),
-                CustomTextField(
-                  title: "Âm Kun",
-                  titleFontSize: 20,
-                  placeholder: "あ.う    あ.わせる    あつ.まる",
-                  backgroundColor: const Color(0xffffffff),
-                  controller: kunyomiController,
-                  borderRadius: 12,
-                  type: TextInputType.text,
-                ),
-                CustomTextField(
-                  title: "Level",
-                  titleFontSize: 20,
-                  placeholder: "Level 70",
-                  backgroundColor: const Color(0xffffffff),
-                  controller: levelController,
-                  borderRadius: 12,
-                  type: TextInputType.number,
-                ),
-                CustomTextField(
-                  title: "Story",
-                  titleFontSize: 20,
-                  placeholder: "A story about the sun rising in the morning...",
-                  backgroundColor: const Color(0xffffffff),
-                  controller: storyController,
-                  borderRadius: 12,
-                  type: TextInputType.multiline,
-                  maxLines: 4,
-                ),
-                SwitchListTile(
-                  value: isStoryActive,
-                  onChanged: (value) {
+                KanjiFormFields(
+                  kanjiController: kanjiController,
+                  meaningController: meaningController,
+                  onyomiController: onyomiController,
+                  kunyomiController: kunyomiController,
+                  levelController: levelController,
+                  storyController: storyController,
+                  aiPromptController: aiPromptController,
+                  isStoryActive: isStoryActive,
+                  onStoryActiveChanged: (value) {
                     setState(() {
                       isStoryActive = value;
                     });
                   },
-                  title: const Text("Active"),
                 ),
-                CustomTextField(
-                  title: "AI Prompt (Optional)",
-                  titleFontSize: 20,
-                  placeholder: "Create a story about daily life",
-                  backgroundColor: const Color(0xffffffff),
-                  controller: aiPromptController,
-                  borderRadius: 12,
-                  type: TextInputType.text,
-                ),
-                ElevatedButton(
-                  onPressed: isGeneratingStory ? null : generateAiStory,
-                  child: Text(isGeneratingStory ? "GENERATING..." : "GENERATE AI STORY"),
-                ),
-                ElevatedButton(
-                  onPressed: submitForm,
-                  child: const Text("SUBMIT"),
+                KanjiFormActions(
+                  isGeneratingStory: isGeneratingStory,
+                  onGenerateStory: generateAiStory,
+                  onSubmit: submitForm,
                 ),
               ],
             ),
