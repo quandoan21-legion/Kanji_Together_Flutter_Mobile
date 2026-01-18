@@ -1,9 +1,7 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-
 import 'package:flutter/material.dart';
-import '../components/kanji_form_actions.dart';
-import '../components/kanji_form_fields.dart';
+import '../services/kanji_api_service.dart';
+import '../widgets/kanji_form_actions.dart';
+import '../widgets/kanji_form_fields.dart';
 
 class FormPage extends StatefulWidget {
   const FormPage({super.key});
@@ -26,28 +24,9 @@ class _FormPageState extends State<FormPage> {
   bool isStoryActive = true;
   bool isGeneratingStory = false;
 
-  static const String _baseUrl = "https://b0cf4586ffec.ngrok-free.app";
+  final KanjiApiService _api = const KanjiApiService();
 
-  int? _parseKanjiId(String body) {
-    try {
-      final decoded = jsonDecode(body);
-      if (decoded is Map<String, dynamic>) {
-        final data = decoded["data"];
-        if (data is Map<String, dynamic>) {
-          final id = data["id"];
-          if (id is int) return id;
-          return int.tryParse(id?.toString() ?? "");
-        }
-        if (data is int) return data;
-        final id = decoded["id"];
-        if (id is int) return id;
-        return int.tryParse(id?.toString() ?? "");
-      }
-    } catch (_) {}
-    return null;
-  }
-
-  Future<int?> _createKanjiCharacter() async {
+  Future<int> _createKanjiCharacter() async {
     final data = {
       "kanji": kanjiController.text.trim(),
       "on_pronunciation": onyomiController.text.trim(),
@@ -60,35 +39,17 @@ class _FormPageState extends State<FormPage> {
       "create_by": 1,
     };
 
-    final response = await http.post(
-      Uri.parse("$_baseUrl/api/v1/kanji-characters"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(data),
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      return _parseKanjiId(response.body);
-    }
-    throw Exception("HTTP ${response.statusCode}: ${response.body}");
+    return _api.createKanjiCharacter(data);
   }
 
-  Future<bool> _submitStory(int kanjiId) async {
+  Future<void> _submitStory(int kanjiId) async {
     final data = {
       "kanji_story": storyController.text.trim(),
       "kanji_id": kanjiId,
       "is_active": isStoryActive,
     };
 
-    final response = await http.post(
-      Uri.parse("$_baseUrl/api/v1/kanji-stories"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(data),
-    );
-
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      return true;
-    }
-    throw Exception("HTTP ${response.statusCode}: ${response.body}");
+    return _api.submitStory(data);
   }
 
   Future<void> generateAiStory() async {
@@ -108,26 +69,10 @@ class _FormPageState extends State<FormPage> {
     };
 
     try {
-      final response = await http.post(
-        Uri.parse("$_baseUrl/api/v1/ai-kanji/generate"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(data),
-      );
-
-      if (response.statusCode == 200) {
-        final decoded = jsonDecode(response.body) as Map<String, dynamic>;
-        final story = (decoded["data"]?["story"] ?? "").toString();
-
-        if (story.isEmpty) {
-          throw Exception("Empty story returned.");
-        }
-
-        setState(() {
-          storyController.text = story;
-        });
-      } else {
-        throw Exception("HTTP ${response.statusCode}: ${response.body}");
-      }
+      final story = await _api.generateAiStory(data);
+      setState(() {
+        storyController.text = story;
+      });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -152,10 +97,6 @@ class _FormPageState extends State<FormPage> {
 
     try {
       final kanjiId = await _createKanjiCharacter();
-
-      if (kanjiId == null) {
-        throw Exception("Missing kanji id in response.");
-      }
 
       if (storyController.text.trim().isNotEmpty) {
         await _submitStory(kanjiId);

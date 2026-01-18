@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
-import '../components/custom_text_field.dart';
+import '../widgets/custom_text_field.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
