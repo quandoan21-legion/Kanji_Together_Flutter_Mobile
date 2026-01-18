@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class KanjiApiService {
-  static const String defaultBaseUrl = "https://b0cf4586ffec.ngrok-free.app";
+  static const String defaultBaseUrl = "https://454fbe6db3b4.ngrok-free.app";
   final String baseUrl;
 
   const KanjiApiService({this.baseUrl = defaultBaseUrl});
 
   Future<List<dynamic>> fetchKanjiList() async {
-    final uri = Uri.parse("$baseUrl/api/v1/kanji-characters");
+    final uri = Uri.parse("$baseUrl/api/v1/kanjis");
     final res = await http.get(uri, headers: {
       "Accept": "application/json",
       "ngrok-skip-browser-warning": "true",
@@ -24,7 +24,7 @@ class KanjiApiService {
 
   Future<int> createKanjiCharacter(Map<String, dynamic> data) async {
     final response = await http.post(
-      Uri.parse("$baseUrl/api/v1/kanji-characters"),
+      Uri.parse("$baseUrl/api/v1/user/kanjis"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(data),
     );

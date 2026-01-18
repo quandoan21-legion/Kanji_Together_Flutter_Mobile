@@ -113,6 +113,8 @@ class _KanjiStoryPageState extends State<KanjiStoryPage> {
     final data = {
       "kanji_story": storyController.text.trim(),
       "kanji_id": selectedKanjiId,
+      "status": "PENDING",
+      "user_email": "qdon21@gmail.com",
       "is_active": isStoryActive,
     };
 

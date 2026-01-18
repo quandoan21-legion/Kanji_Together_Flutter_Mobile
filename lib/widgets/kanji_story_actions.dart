@@ -14,7 +14,8 @@ class KanjiStoryActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         ElevatedButton(
           onPressed: isGeneratingStory ? null : onGenerateStory,
