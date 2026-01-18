@@ -7,10 +7,6 @@ class KanjiFormFields extends StatelessWidget {
   final TextEditingController onyomiController;
   final TextEditingController kunyomiController;
   final TextEditingController levelController;
-  final TextEditingController storyController;
-  final TextEditingController aiPromptController;
-  final bool isStoryActive;
-  final ValueChanged<bool> onStoryActiveChanged;
 
   const KanjiFormFields({
     super.key,
@@ -19,10 +15,6 @@ class KanjiFormFields extends StatelessWidget {
     required this.onyomiController,
     required this.kunyomiController,
     required this.levelController,
-    required this.storyController,
-    required this.aiPromptController,
-    required this.isStoryActive,
-    required this.onStoryActiveChanged,
   });
 
   @override
@@ -78,30 +70,6 @@ class KanjiFormFields extends StatelessWidget {
           controller: levelController,
           borderRadius: 12,
           type: TextInputType.number,
-        ),
-        CustomTextField(
-          title: "Story",
-          titleFontSize: 20,
-          placeholder: "A story about the sun rising in the morning...",
-          backgroundColor: const Color(0xffffffff),
-          controller: storyController,
-          borderRadius: 12,
-          type: TextInputType.multiline,
-          maxLines: 4,
-        ),
-        SwitchListTile(
-          value: isStoryActive,
-          onChanged: onStoryActiveChanged,
-          title: const Text("Active"),
-        ),
-        CustomTextField(
-          title: "AI Prompt (Optional)",
-          titleFontSize: 20,
-          placeholder: "Create a story about daily life",
-          backgroundColor: const Color(0xffffffff),
-          controller: aiPromptController,
-          borderRadius: 12,
-          type: TextInputType.text,
         ),
       ],
     );

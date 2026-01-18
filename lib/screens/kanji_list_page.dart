@@ -14,6 +14,7 @@ class _KanjiListPageState extends State<KanjiListPage> {
   bool isLoading = true;
 
   final KanjiApiService _api = const KanjiApiService();
+  final Map<int, int> _storyCountByKanjiId = {};
 
   @override
   void initState() {
@@ -25,9 +26,24 @@ class _KanjiListPageState extends State<KanjiListPage> {
     setState(() => isLoading = true);
 
     try {
-      final list = await _api.fetchKanjiList();
+      final results = await Future.wait([
+        _api.fetchKanjiList(),
+        _api.fetchKanjiStories(),
+      ]);
+      final list = results[0];
+      final stories = results[1];
+      final Map<int, int> counts = {};
+      for (final story in stories.whereType<Map<String, dynamic>>()) {
+        final id = story["kanji_id"];
+        final kanjiId = id is int ? id : int.tryParse(id?.toString() ?? "");
+        if (kanjiId == null) continue;
+        counts[kanjiId] = (counts[kanjiId] ?? 0) + 1;
+      }
       setState(() {
         kanjiList = List<dynamic>.from(list);
+        _storyCountByKanjiId
+          ..clear()
+          ..addAll(counts);
         isLoading = false;
       });
     } catch (e) {
@@ -46,6 +62,7 @@ class _KanjiListPageState extends State<KanjiListPage> {
       body: KanjiListBody(
         isLoading: isLoading,
         kanjiList: kanjiList,
+        storyCountByKanjiId: _storyCountByKanjiId,
       ),
     );
   }

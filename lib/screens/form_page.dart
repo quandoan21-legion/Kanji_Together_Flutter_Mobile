@@ -18,11 +18,6 @@ class _FormPageState extends State<FormPage> {
   final onyomiController = TextEditingController();
   final kunyomiController = TextEditingController();
   final levelController = TextEditingController();
-  final storyController = TextEditingController();
-  final aiPromptController = TextEditingController();
-
-  bool isStoryActive = true;
-  bool isGeneratingStory = false;
 
   final KanjiApiService _api = const KanjiApiService();
 
@@ -42,49 +37,6 @@ class _FormPageState extends State<FormPage> {
     return _api.createKanjiCharacter(data);
   }
 
-  Future<void> _submitStory(int kanjiId) async {
-    final data = {
-      "kanji_story": storyController.text.trim(),
-      "kanji_id": kanjiId,
-      "is_active": isStoryActive,
-    };
-
-    return _api.submitStory(data);
-  }
-
-  Future<void> generateAiStory() async {
-    if (kanjiController.text.trim().isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter Kanji to generate story.")),
-      );
-      return;
-    }
-
-    setState(() => isGeneratingStory = true);
-
-    final data = {
-      "kanji": kanjiController.text.trim(),
-      "custom_prompt": aiPromptController.text.trim(),
-    };
-
-    try {
-      final story = await _api.generateAiStory(data);
-      setState(() {
-        storyController.text = story;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to generate story: $e")),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => isGeneratingStory = false);
-      }
-    }
-  }
-
   Future<void> submitForm() async {
     FocusScope.of(context).unfocus();
     if (kanjiController.text.trim().isEmpty) {
@@ -96,11 +48,7 @@ class _FormPageState extends State<FormPage> {
     }
 
     try {
-      final kanjiId = await _createKanjiCharacter();
-
-      if (storyController.text.trim().isNotEmpty) {
-        await _submitStory(kanjiId);
-      }
+      await _createKanjiCharacter();
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -122,8 +70,6 @@ class _FormPageState extends State<FormPage> {
     onyomiController.dispose();
     kunyomiController.dispose();
     levelController.dispose();
-    storyController.dispose();
-    aiPromptController.dispose();
     super.dispose();
   }
 
@@ -144,18 +90,8 @@ class _FormPageState extends State<FormPage> {
                   onyomiController: onyomiController,
                   kunyomiController: kunyomiController,
                   levelController: levelController,
-                  storyController: storyController,
-                  aiPromptController: aiPromptController,
-                  isStoryActive: isStoryActive,
-                  onStoryActiveChanged: (value) {
-                    setState(() {
-                      isStoryActive = value;
-                    });
-                  },
                 ),
                 KanjiFormActions(
-                  isGeneratingStory: isGeneratingStory,
-                  onGenerateStory: generateAiStory,
                   onSubmit: submitForm,
                 ),
               ],

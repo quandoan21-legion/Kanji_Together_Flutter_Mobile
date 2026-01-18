@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'form_page.dart';
 import 'kanji_list_page.dart';
+import 'kanji_story_page.dart';
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
 
@@ -14,7 +15,7 @@ class _MainLayoutState extends State<MainLayout> {
   final List<Widget> _pages = [
     const FormPage(),
     const KanjiListPage(),
-    const Center(child: Text("PROFILE PAGE")),
+    const KanjiStoryPage(),
   ];
 
   @override
@@ -38,8 +39,8 @@ class _MainLayoutState extends State<MainLayout> {
             label: 'List',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.auto_stories),
+            label: 'Story',
           ),
         ],
       ),
